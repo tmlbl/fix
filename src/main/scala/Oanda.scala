@@ -1,5 +1,4 @@
 import java.util.Date
-import System.out.println
 
 import scalaj.http.Http
 import net.liftweb.json._
@@ -25,7 +24,6 @@ object Oanda {
       "candleFormat" -> "midpoint",
       "granularity" -> "M1"
     )).header("Content-Type", "application/json").header("X-Accept-Datetime-Format", "UNIX")
-    println(res.asString.body)
     parse(res.asString.body).extract[CandleResponse]
   }
 
