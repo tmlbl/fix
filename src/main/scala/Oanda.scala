@@ -1,68 +1,32 @@
-import java.text.SimpleDateFormat
 import java.util.Date
 import System.out.println
 
 import scalaj.http.Http
-import spray.json._
+import net.liftweb.json._
 
-case class Candle(time: Date, openMid: Long, highMid: Long, lowMid: Long,
-                  closeMid: Long, volume: Int, complete: Boolean)
+case class Candle(time: String, openMid: Double, highMid: Double, lowMid: Double,
+                  closeMid: Double, volume: Int, complete: Boolean)
+{
+  val date = new Date(time.toLong / 1000)
+}
 
 case class CandleResponse(instrument: String, granularity: String, candles: Seq[Candle])
 
 object Oanda {
   val baseUrl = "http://api-sandbox.oanda.com"
-  val rfcDate = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ssXXX")
+  def nixDate(date: Date): String = { (date.getTime / 1000).toInt.toString }
+  implicit val formats = DefaultFormats
 
-  implicit val DateFormat = new RootJsonFormat[Date] {
-    def read(json: JsValue): Date = {
-      new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ssXXX").parse(json.compactPrint.toString)
-    }
-    def write(date: Date) = JsString(
-      new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ssXXX").format(date)
-    )
-  }
-
-  implicit val CandleFormat = new RootJsonFormat[Candle] {
-    def read(json: JsValue): Candle = {
-      println("Candle data class name is", json.getClass.toString)
-      println(json.compactPrint)
-      val fields = json.asJsObject.getFields("time")
-      fields match {
-        case Seq(JsString(time)) => new Candle(time = rfcDate.parse(time), 0, 0, 0, 0, 0, false)
-        case _ => throw new DeserializationException("Match failed")
-      }
-    }
-    def write(candle: Candle) = JsObject(
-      "time" -> JsString(candle.time.toString),
-      "openMid" -> JsNumber(candle.openMid),
-      "highMid" -> JsNumber(candle.highMid),
-      "lowMid" -> JsNumber(candle.lowMid),
-      "closeMid" -> JsNumber(candle.closeMid),
-      "volume" -> JsNumber(candle.volume),
-      "complete" -> JsBoolean(candle.complete)
-    )
-  }
-
-  implicit val SeqCandleFormat = new RootJsonFormat[Seq[Candle]] {
-    def read(json: JsValue): Seq[Candle] = {
-      json.asJsObject.getFields().map((field: JsValue) => {
-        println(field)
-        field.convertTo[Candle]
-      })
-    }
-    def write(candles: Seq[Candle]): JsValue = candles.toJson
-  }
-
-  def getCandles(instrument: String, start: Date, end: Date): Unit = {
+  def fetchCandles(instrument: String, start: Date, end: Date): CandleResponse = {
     val res = Http(baseUrl + "/v1/candles").params(Seq(
       "instrument" -> instrument,
-      "start" -> rfcDate.format(start),
-      "end" -> rfcDate.format(end),
-      "candleFormat" -> "midpoint"
-    ))
-    val resJson = res.asString.body.parseJson
-    val candles = resJson.asJsObject.getFields("candles")
-    candles.foreach((candleList: JsValue) => candleList.convertTo[Seq[Candle]])
+      "start" -> nixDate(start),
+      "end" -> nixDate(end),
+      "candleFormat" -> "midpoint",
+      "granularity" -> "M1"
+    )).header("Content-Type", "application/json").header("X-Accept-Datetime-Format", "UNIX")
+    println(res.asString.body)
+    parse(res.asString.body).extract[CandleResponse]
   }
+
 }

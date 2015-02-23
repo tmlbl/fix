@@ -5,10 +5,10 @@ version := "0.0"
 scalaVersion := "2.11.4"
 
 
-libraryDependencies += "org.scalatest" %% "scalatest" % "2.2.4" % "test"
+libraryDependencies += "org.scalatest" %% "scalatest" % "latest.release" % "test"
 
 libraryDependencies += "com.cra.figaro" %% "figaro" % "latest.release"
 
-libraryDependencies +=  "org.scalaj" %% "scalaj-http" % "1.1.4"
+libraryDependencies +=  "org.scalaj" %% "scalaj-http" % "latest.release"
 
-libraryDependencies += "io.spray" %%  "spray-json" % "1.3.1"
+libraryDependencies += "net.liftweb" %% "lift-json" % "latest.release"
