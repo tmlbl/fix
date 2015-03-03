@@ -22,9 +22,8 @@ object Oanda {
       "start" -> nixDate(start),
       "end" -> nixDate(end),
       "candleFormat" -> "midpoint",
-      "granularity" -> "M1"
+      "granularity" -> "S10"
     )).header("Content-Type", "application/json").header("X-Accept-Datetime-Format", "UNIX")
     parse(res.asString.body).extract[CandleResponse]
   }
-
 }

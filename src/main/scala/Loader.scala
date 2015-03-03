@@ -15,9 +15,11 @@ class Loader(filepath: String) {
       title = parsed(0),
       impact = parsed(1),
       time = parseDate(parsed(2)),
-      country = parsed(3)
+      country = stripChars(parsed(3), "\"")
     )
   })
+
+  def stripChars(s:String, ch:String)= s filterNot (ch contains _)
 
   def parseDate(dts: String): Date = DatatypeConverter.parseDateTime(dts).getTime
 }
